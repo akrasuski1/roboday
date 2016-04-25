@@ -130,6 +130,8 @@ void init(){
 	// Enable interrupt on compare match and on overflow.
 	TIMSK|=(1<<OCIE1A)|(1<<TOIE1);
 
+	init_fs();
+
 	sei();
 }
 
@@ -140,23 +142,44 @@ void die(){
 
 int main(void){
 	init();
-	init_fs();
-	_delay_ms(200);
-	_delay_ms(1000);
+	command cmd;
 	while(1){
-		//stepsl-=1500;
-		//stepsr-=1500;
-		//set_servo(1000);
-		_delay_ms(2500);
-		//set_servo(1500);
-		_delay_ms(2500);
-
-		//stepsl+=1500;
-		//stepsr+=1500;
-		//set_servo(2000);
-		_delay_ms(2500);
-		//set_servo(1500);
-		_delay_ms(2500);
-
+		get_cmd(&cmd);
+		switch(cmd.type){
+		case CMD_END:
+			led_on();
+			die();
+			break;
+		case CMD_RAISE_PEN:
+			set_servo(600);
+			_delay_ms(500);
+			break;
+		case CMD_DROP_PEN:
+			set_servo(2100);
+			_delay_ms(500);
+			break;
+		case CMD_TURN_LEFT:
+			stepsl-=cmd.num;
+			stepsr+=cmd.num;
+			while(stepsl || stepsr);
+			break;
+		case CMD_TURN_RIGHT:
+			stepsl+=cmd.num;
+			stepsr-=cmd.num;
+			while(stepsl || stepsr);
+			break;
+		case CMD_FORWARD:
+			stepsl+=cmd.num;
+			stepsr+=cmd.num;
+			while(stepsl || stepsr);
+			break;
+		case CMD_BACKWARD:
+			stepsl-=cmd.num;
+			stepsr-=cmd.num;
+			while(stepsl || stepsr);
+			break;
+		default:
+			die();
+		}
 	}
 }
