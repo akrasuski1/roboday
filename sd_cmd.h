@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+// Protocol for commands.
 #define CMD_END        0
 #define CMD_RAISE_PEN  1
 #define CMD_DROP_PEN   2
