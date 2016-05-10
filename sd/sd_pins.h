@@ -4,13 +4,13 @@
 #define MISO_PINX PIND
 #define MISO_PIN  (1<<3)
 
-#define MOSI_DDR  DDRD
-#define MOSI_PORT PORTD
-#define MOSI_PIN  (1<<4)
-
 #define SCK_DDR  DDRD
 #define SCK_PORT PORTD
-#define SCK_PIN  (1<<5)
+#define SCK_PIN  (1<<4)
+
+#define MOSI_DDR  DDRD
+#define MOSI_PORT PORTD
+#define MOSI_PIN  (1<<5)
 
 #define CS_DDR  DDRD
 #define CS_PORT PORTD

@@ -20,13 +20,6 @@
 #define RPIN2 6
 #define RPIN3 7
 
-void led_on(){
-	SETB(PORTD,2);
-}
-void led_off(){
-	CLRB(PORTD,2);
-}
-
 volatile int stepsl=0,stepsr=0;
 ISR(TIMER0_COMP_vect){
 	static int stepl=0, stepr=0;
@@ -88,9 +81,9 @@ ISR(TIMER0_COMP_vect){
 	}
 }
 
-#define SERVO     PORTB
-#define SERVO_DDR DDRB
-#define SERVO_PIN 0
+#define SERVO     PORTD
+#define SERVO_DDR DDRD
+#define SERVO_PIN 7
 
 ISR(TIMER1_COMPA_vect){
 	CLRB(SERVO, SERVO_PIN);
@@ -102,10 +95,13 @@ ISR(TIMER1_OVF_vect){
 
 void set_servo(int pos){
 	OCR1A=pos;
+	_delay_ms(500);
 }
 
+#define SERVO_TOP   700
+#define SERVO_WRITE 1200
+
 void init(){
-	SETB(DDRD, 2); // TODO erase it
 
 	LEFT_DDR |=(1<<LPIN0)|(1<<LPIN1)|(1<<LPIN2)|(1<<LPIN3);
 	RIGHT_DDR|=(1<<RPIN0)|(1<<RPIN1)|(1<<RPIN2)|(1<<RPIN3);
@@ -116,7 +112,7 @@ void init(){
 	// Count to OCR0, prescaler=64
 	TCCR0|=(1<<WGM01)|(1<<CS01)|(1<<CS00);
 	// Interrupt every OCR0 clocks.
-	OCR0=200;
+	OCR0=250;
 	// Enable interrupt.
 	TIMSK|=1<<OCIE0;
 
@@ -126,7 +122,7 @@ void init(){
 	// Prescaler = 8
 	TCCR1B|=(1<<WGM13)|(1<<WGM12)|(1<<CS11);
 	ICR1=20000; // period=20ms (50Hz)
-	set_servo(1400); // neutral position
+	set_servo(SERVO_TOP); // neutral position
 	// Enable interrupt on compare match and on overflow.
 	TIMSK|=(1<<OCIE1A)|(1<<TOIE1);
 
@@ -136,27 +132,32 @@ void init(){
 }
 
 void die(){
+	set_servo(SERVO_TOP);
 	cli();
 	while(1);
 }
 
 int main(void){
 	init();
+
+	/*set_servo(SERVO_WRITE);
+	stepsl+=10000;
+	stepsr-=10000;
+	while(stepsl || stepsr);
+	while(1);*/
+
 	command cmd;
 	while(1){
 		get_cmd(&cmd);
 		switch(cmd.type){
 		case CMD_END:
-			led_on();
 			die();
 			break;
 		case CMD_RAISE_PEN:
-			set_servo(600);
-			_delay_ms(500);
+			set_servo(SERVO_TOP);
 			break;
 		case CMD_DROP_PEN:
-			set_servo(2100);
-			_delay_ms(500);
+			set_servo(SERVO_WRITE);
 			break;
 		case CMD_TURN_LEFT:
 			stepsl-=cmd.num;
@@ -181,5 +182,6 @@ int main(void){
 		default:
 			die();
 		}
+		_delay_ms(100);
 	}
 }
